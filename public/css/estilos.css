@@ -1,0 +1,139 @@
+/* === Fidexa CRM - Estilo Principal === */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.content {
+    flex: 1;
+}
+
+footer {
+    background-color: var(--verde-principal);
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    margin-top: auto;
+}
+
+/* Colores Base */
+:root {
+    --verde-principal: #2ECC71;
+    --verde-oscuro: #27AE60;
+    --gris-claro: #F2F2F2;
+    --blanco: #FFFFFF;
+    --texto-oscuro: #2C3E50;
+}
+
+/* Estilo general */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--gris-claro);
+    color: var(--texto-oscuro);
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    padding: 20px;
+}
+
+/* Botones */
+button, .btn {
+    background-color: var(--verde-principal);
+    color: var(--blanco);
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover, .btn:hover {
+    background-color: var(--verde-oscuro);
+}
+
+/* Títulos */
+h1, h2, h3, h4 {
+    color: var(--verde-oscuro);
+}
+
+/* Tarjetas y paneles */
+.card {
+    background-color: var(--blanco);
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.navbar {
+    background-color: var(--verde-principal);
+    padding: 15px;
+}
+
+.navbar .nav-links a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.navbar .nav-links a:hover {
+    color: #d1fae5;
+}
+
+.card {
+    transition: transform 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.kpi-card {
+    background: #f9fdfb;
+    border-left: 6px solid var(--verde-principal);
+    border-radius: 12px;
+    transition: all 0.2s ease-in-out;
+}
+
+.kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* === SIDEBAR LOGO Y ESTILO === */
+.logo-fidexa {
+    width: 80px;
+    display: block;
+    margin: 0 auto;
+    margin-bottom: 5px;
+}
+
+.sidebar {
+    background-color: #f4fdf9;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+.sidebar .nav-link {
+    font-weight: 500;
+    color: #2C3E50;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.sidebar .nav-link:hover {
+    color: #2ECC71;
+    transform: translateX(3px);
+}
