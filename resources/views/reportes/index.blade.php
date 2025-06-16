@@ -22,6 +22,21 @@
             <h3 class="text-gray-700 text-lg font-semibold mb-4">Distribución de Interacciones por Tipo</h3>
             <canvas id="graficoInteracciones" class="w-full" style="height: 300px;"></canvas>
         </div>
+
+        <!-- KPIs por Cliente -->
+        <h2 class="text-xl font-semibold mt-8 mb-4">Clientes</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach($clientesData as $data)
+                <x-cliente-card :cliente="$data['cliente']"
+                                :total-gastado="$data['totalGastado']"
+                                :nivel="$data['nivel']"
+                                :ultima-compra="$data['ultimaCompra']"
+                                :labels="$data['labels']"
+                                :data="$data['data']"
+                                :interacciones-labels="$data['interaccionesLabels']"
+                                :interacciones-data="$data['interaccionesData']" />
+            @endforeach
+        </div>
     </div>
 </div>
 @endsection

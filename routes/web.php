@@ -42,6 +42,7 @@ Route::middleware([
 
     // Módulo de Clientes
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
+    Route::get('/clientes/kpis', [ClienteController::class, 'kpis'])->name('clientes.kpis');
     Route::get('/clientes/crear', [ClienteController::class, 'create'])->name('clientes.create');
     Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
     Route::get('/clientes/{cliente}/editar', [ClienteController::class, 'edit'])->name('clientes.edit');
