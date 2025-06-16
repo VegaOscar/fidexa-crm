@@ -32,3 +32,7 @@ Thumbs.db
 # Archivos de entorno de Laragon (puedes agregarlos si usas Laragon)
 *.bak
 *.tmp
+
+# Build assets
+/public/build/
+/public/vendor/livewire/

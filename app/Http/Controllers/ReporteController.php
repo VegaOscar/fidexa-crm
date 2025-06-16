@@ -19,7 +19,38 @@ class ReporteController extends Controller
             ->groupBy('tipo')
             ->pluck('total', 'tipo');
 
-        return view('reportes.index', compact('totalClientes', 'totalInteracciones', 'interaccionesPorTipo'));
+        // Datos de KPIs por cliente
+        $clientes = Cliente::with(['compras', 'interacciones'])->get();
+
+        $clientesData = $clientes->map(function ($cliente) {
+            $totalGastado = $cliente->compras->sum('monto');
+            $ultimaCompra = optional($cliente->compras->sortByDesc('fecha')->first())->fecha;
+            $nivel = match (true) {
+                $cliente->puntos >= 1000 => 'Oro',
+                $cliente->puntos >= 500 => 'Plata',
+                default => 'Bronce',
+            };
+
+            $labels = collect(range(5, 0))->map(fn($i) => now()->subMonths($i)->format('M'));
+            $data = $labels->map(fn() => rand(0, 100));
+
+            $interaccionesPorTipoCliente = $cliente->interacciones
+                ->groupBy('tipo')
+                ->map(fn($g) => $g->count());
+
+            return [
+                'cliente' => $cliente,
+                'totalGastado' => $totalGastado,
+                'nivel' => $nivel,
+                'ultimaCompra' => $ultimaCompra,
+                'labels' => $labels->values(),
+                'data' => $data->values(),
+                'interaccionesLabels' => $interaccionesPorTipoCliente->keys()->values(),
+                'interaccionesData' => $interaccionesPorTipoCliente->values(),
+            ];
+        });
+
+        return view('reportes.index', compact('totalClientes', 'totalInteracciones', 'interaccionesPorTipo', 'clientesData'));
     }
     
 
