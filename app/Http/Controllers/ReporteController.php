@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cliente;
+use App\Models\Compra;
 use App\Models\Interaccion;
 
 class ReporteController extends Controller

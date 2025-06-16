@@ -28,18 +28,18 @@ class CanjeController extends Controller
             return back()->with('error', 'El cliente no tiene suficientes puntos.');
         }
 
-        // Registrar el canje
         Canje::create([
             'cliente_id' => $cliente->id,
             'puntos_canjeados' => $request->puntos_canjeados,
             'fecha' => Carbon::now(),
         ]);
 
-        // Descontar puntos
         $cliente->puntos -= $request->puntos_canjeados;
         $cliente->save();
 
-        return redirect('/clientes')->with('success', 'Canje realizado correctamente.');
+        return redirect()->route('canjes.create', $cliente->id)->with('success', 'Canje realizado correctamente.');
     }
+
+
 }
 

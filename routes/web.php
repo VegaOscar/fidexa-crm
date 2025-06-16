@@ -4,64 +4,85 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\InteraccionController;
 use App\Http\Controllers\ReporteController;
-
-Route::get('/clientes', [ClienteController::class, 'index']);
-Route::get('/clientes/crear', [ClienteController::class, 'create']);
-Route::post('/clientes', [ClienteController::class, 'store']);
-
-Route::get('/interacciones', [InteraccionController::class, 'index']);
-Route::get('/interacciones/crear', [InteraccionController::class, 'create']);
-Route::post('/interacciones', [InteraccionController::class, 'store']);
-
-Route::get('/reportes', [ReporteController::class, 'index']);
-
-// ✅ Reemplazado correctamente
-Route::get('/', [ReporteController::class, 'index']);
-
 use App\Http\Controllers\CompraController;
-
-Route::get('/clientes/{id}/compras', [CompraController::class, 'index']);
-Route::get('/clientes/{id}/compras/crear', [CompraController::class, 'create']);
-Route::post('/clientes/{id}/compras', [CompraController::class, 'store']);
-
-Route::get('/reportes/cliente/{id}', [ReporteController::class, 'cliente'])->name('reportes.cliente');
-
-
-
 use App\Http\Controllers\PuntoController;
-
-Route::get('/clientes/{id}/canjear', [PuntoController::class, 'mostrarFormulario'])->name('puntos.formulario');
-Route::post('/clientes/{id}/canjear', [PuntoController::class, 'canjear'])->name('puntos.canjear');
-
 use App\Http\Controllers\CanjePuntosController;
-
-Route::get('/clientes/{cliente}/canje', [CanjePuntosController::class, 'show'])->name('canje.index');
-Route::post('/clientes/{cliente}/canje', [CanjePuntosController::class, 'canjear'])->name('canje.canjear');
-
-// routes/web.php
 use App\Http\Controllers\CanjeController;
-
-// Ruta para mostrar el formulario de canje
-Route::get('/canjes/{cliente}/crear', [CanjeController::class, 'create'])->name('canjes.create');
-
-// Ruta para procesar el formulario
-Route::post('/canjes/{cliente}', [CanjeController::class, 'store'])->name('canjes.store');
-
-
 use App\Http\Controllers\AlertaController;
-
-Route::get('/alertas/inactivos', [AlertaController::class, 'clientesInactivos'])->name('alertas.inactivos');
-
-
 use App\Http\Controllers\BonificacionController;
-
-Route::get('/bonificaciones/otorgar', [BonificacionController::class, 'otorgarBonificaciones'])->name('bonificaciones.otorgar');
-
-
-Route::get('/', function () {
-    return view('inicio');
-});
-
-
 use App\Http\Controllers\InicioController;
+use App\Http\Livewire\Usuarios;
+use App\Http\Controllers\ClienteImportController;
+
+/*
+|--------------------------------------------------------------------------
+| Rutas públicas o de prueba
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', [InicioController::class, 'index']);
+
+
+/*
+|--------------------------------------------------------------------------
+| Rutas protegidas por autenticación
+|--------------------------------------------------------------------------
+*/
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+])->group(function () {
+
+    // Dashboard principal
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+
+    // Módulo de Clientes
+    Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
+    Route::get('/clientes/crear', [ClienteController::class, 'create'])->name('clientes.create');
+    Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
+    Route::get('/clientes/{cliente}/editar', [ClienteController::class, 'edit'])->name('clientes.edit');
+    Route::put('/clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
+    Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
+    Route::get('/api/clientes/{id}', function($id) 
+    {
+    return App\Models\Cliente::findOrFail($id);
+    });
+    Route::post('/clientes/importar', [ClienteController::class, 'importar'])->name('clientes.importar');
+
+
+
+
+    // Compras por cliente
+    Route::get('/clientes/{id}/compras', [CompraController::class, 'index']);
+    Route::get('/clientes/{id}/compras/crear', [CompraController::class, 'create']);
+    Route::post('/clientes/{id}/compras', [CompraController::class, 'store']);
+
+    // Interacciones
+    Route::get('/interacciones', [InteraccionController::class, 'index']);
+    Route::get('/interacciones/crear', [InteraccionController::class, 'create']);
+    Route::post('/interacciones', [InteraccionController::class, 'store']);
+
+    // Canjes de puntos
+    Route::get('/clientes/{id}/canjear', [CanjeController::class, 'create'])->name('canjes.create');
+    Route::post('/clientes/{id}/canjear', [CanjeController::class, 'store'])->name('canjes.store');
+
+
+    // Reportes
+    Route::get('/reportes', [ReporteController::class, 'index']);
+    Route::get('/reportes/cliente/{id}', [ReporteController::class, 'cliente'])->name('reportes.cliente');
+
+    // Alertas de inactividad
+    Route::get('/alertas/inactivos', [AlertaController::class, 'clientesInactivos'])->name('alertas.inactivos');
+
+    // Bonificaciones
+    Route::get('/bonificaciones/otorgar', [BonificacionController::class, 'otorgarBonificaciones'])->name('bonificaciones.otorgar');
+
+    // Livewire: Gestión de Usuarios
+    Route::get('/usuarios', Usuarios::class)->name('usuarios');
+
+
+});
