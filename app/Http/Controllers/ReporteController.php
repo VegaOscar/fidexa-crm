@@ -12,15 +12,73 @@ class ReporteController extends Controller
     // 📌 Muestra el dashboard general de reportes
     public function index()
     {
+        // Datos generales
         $totalClientes = Cliente::count();
-        $totalInteracciones = Interaccion::count();
+        $totalCompras = Compra::count();
+        $montoTotal = Compra::sum('monto');
+        $promedioGasto = round(Compra::avg('monto'), 2);
 
+        // Clientes activos (últimos 30 días)
+        $clientesActivos = Cliente::whereHas('compras', function ($query) {
+            $query->where('fecha', '>=', now()->subDays(30));
+        })->count();
+        $clientesInactivos = $totalClientes - $clientesActivos;
+
+        // Frecuencia promedio de compra
+        $frecuencias = [];
+        $clientes = Cliente::with('compras')->get();
+        foreach ($clientes as $cliente) {
+            $compras = $cliente->compras->sortBy('fecha');
+            for ($i = 1; $i < $compras->count(); $i++) {
+                $frecuencias[] = \Carbon\Carbon::parse($compras[$i]->fecha)
+                    ->diffInDays(\Carbon\Carbon::parse($compras[$i - 1]->fecha));
+            }
+        }
+        $frecuenciaPromedio = count($frecuencias) ? round(array_sum($frecuencias) / count($frecuencias)) : 0;
+
+        // Interacciones por tipo
         $interaccionesPorTipo = Interaccion::selectRaw('tipo, COUNT(*) as total')
             ->groupBy('tipo')
             ->pluck('total', 'tipo');
 
-        return view('reportes.index', compact('totalClientes', 'totalInteracciones', 'interaccionesPorTipo'));
+        // Compras por mes
+        $comprasPorMes = Compra::selectRaw("DATE_FORMAT(fecha, '%Y-%m') as mes, SUM(monto) as total")
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes');
+
+        $labelsMeses = $comprasPorMes->keys();
+        $valoresMeses = $comprasPorMes->values();
+
+        // Top 5 clientes rentables
+        $clientesRentables = Compra::selectRaw('cliente_id, SUM(monto) as monto')
+            ->groupBy('cliente_id')
+            ->orderByDesc('monto')
+            ->take(5)
+            ->get()
+            ->map(function ($item) {
+                $cliente = Cliente::find($item->cliente_id);
+                return (object)[
+                    'nombre' => $cliente?->nombre ?? 'Desconocido',
+                    'monto' => floatval($item->monto),
+                ];
+            });
+
+        return view('reportes.index', compact(
+            'totalClientes',
+            'totalCompras',
+            'montoTotal',
+            'promedioGasto',
+            'clientesActivos',
+            'clientesInactivos',
+            'frecuenciaPromedio',
+            'interaccionesPorTipo',
+            'labelsMeses',
+            'valoresMeses',
+            'clientesRentables'
+        ));
     }
+
     
 
     // 📌 Muestra el reporte individual de un cliente
@@ -113,4 +171,97 @@ class ReporteController extends Controller
 
 }
 
+    public function create()
+{
+    $clientes = Cliente::all();
+    $sucursales = Compra::select('sucursal')->distinct()->pluck('sucursal');
+    $tiposInteraccion = Interaccion::select('tipo')->distinct()->pluck('tipo');
+
+    return view('reportes.create', compact('clientes', 'sucursales', 'tiposInteraccion'));
+}
+
+// 🛠️ Genera el reporte según filtros seleccionados
+public function generate(Request $request)
+{
+    $comprasQuery = Compra::query();
+    $interaccionesQuery = Interaccion::query();
+
+    if ($request->filled('cliente_id')) {
+        $comprasQuery->where('cliente_id', $request->cliente_id);
+        $interaccionesQuery->where('cliente_id', $request->cliente_id);
+    }
+
+    if ($request->filled('desde')) {
+        $comprasQuery->where('fecha', '>=', $request->desde);
+        $interaccionesQuery->where('fecha', '>=', $request->desde);
+    }
+
+    if ($request->filled('hasta')) {
+        $comprasQuery->where('fecha', '<=', $request->hasta);
+        $interaccionesQuery->where('fecha', '<=', $request->hasta);
+    }
+
+    if ($request->filled('sucursal')) {
+        $comprasQuery->where('sucursal', $request->sucursal);
+    }
+
+    if ($request->filled('tipo_interaccion')) {
+        $interaccionesQuery->where('tipo', $request->tipo_interaccion);
+    }
+
+    $compras = $comprasQuery->get();
+    $interacciones = $interaccionesQuery->get();
+
+    $resultado = [
+        'total_compras' => $compras->count(),
+        'monto_total' => $compras->sum('monto'),
+        'total_interacciones' => $interacciones->count(),
+        'puntos' => floor($compras->sum('monto') / 100),
+    ];
+
+    $comprasPorMes = $compras->groupBy(function ($c) {
+        return \Carbon\Carbon::parse($c->fecha)->format('Y-m');
+    })->map->sum('monto');
+
+    $labels = $comprasPorMes->keys();
+    $monto = $comprasPorMes->values();
+
+    $validated = $request->validate([
+        'desde' => ['required', 'date'],
+        'hasta' => ['required', 'date', 'after_or_equal:desde'],
+        'metricas' => ['required', 'array', 'min:1'],
+    ]);
+
+    if ($request->has('exportar_excel')) {
+        $rows = $compras->map(function ($compra) {
+            return [
+                $compra->cliente->nombre ?? '',
+                $compra->fecha,
+                $compra->monto,
+                $compra->sucursal,
+            ];
+        });
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ReporteExport($rows), 'reporte.xlsx');
+    }
+
+    $clientes = Cliente::all();
+    $sucursales = Compra::select('sucursal')->distinct()->pluck('sucursal');
+    $tiposInteraccion = Interaccion::select('tipo')->distinct()->pluck('tipo');
+
+    return view('reportes.create', compact(
+        'clientes',
+        'sucursales',
+        'tiposInteraccion',
+        'resultado',
+        'labels',
+        'monto'
+    ));
+}
+
+// 📤 Exporta el reporte filtrado a Excel
+public function export(Request $request)
+{
+    return $this->generate($request->merge(['exportar_excel' => true]));
+}
 }
