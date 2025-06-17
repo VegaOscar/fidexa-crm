@@ -71,6 +71,55 @@
                             </li>
                         @endif
                     </ul>
+
+                    @if(!empty($resultados))
+                        @php
+                            $etiquetas = [
+                                'total_compras' => 'Total de Compras',
+                                'monto_total' => 'Monto Total',
+                                'total_puntos' => 'Total de Puntos',
+                            ];
+
+                            $chartLabels = [];
+                            $chartData = [];
+                            foreach ($resultados as $clave => $valor) {
+                                $chartLabels[] = $etiquetas[$clave] ?? $clave;
+                                $chartData[] = $valor;
+                            }
+                        @endphp
+                        <div class="mt-6">
+                            <canvas id="metricasChart" class="w-full h-64"></canvas>
+                        </div>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                const ctx = document.getElementById('metricasChart');
+                                if (ctx) {
+                                    new Chart(ctx, {
+                                        type: 'bar',
+                                        data: {
+                                            labels: @json($chartLabels),
+                                            datasets: [{
+                                                label: 'Resultados',
+                                                data: @json($chartData),
+                                                backgroundColor: '#34d399',
+                                                borderColor: '#10b981',
+                                                borderWidth: 1
+                                            }]
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            plugins: {
+                                                legend: { display: false }
+                                            },
+                                            scales: {
+                                                y: { beginAtZero: true }
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                        </script>
+                    @endif
                 </div>
             </div>
         @endisset
