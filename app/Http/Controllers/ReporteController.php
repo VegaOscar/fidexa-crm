@@ -225,12 +225,7 @@ public function generate(Request $request)
 
     $labels = $comprasPorMes->keys();
     $monto = $comprasPorMes->values();
-
-    $validated = $request->validate([
-        'desde' => ['required', 'date'],
-        'hasta' => ['required', 'date', 'after_or_equal:desde'],
-        'metricas' => ['required', 'array', 'min:1'],
-    ]);
+    
 
     if ($request->has('exportar_excel')) {
         $rows = $compras->map(function ($compra) {
