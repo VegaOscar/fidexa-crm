@@ -1,27 +1,60 @@
-<?php
-
-namespace App\Exports;
-
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-
-class ReporteExport implements FromCollection, WithHeadings
+public function cliente(Request $request, $id)
 {
-    protected Collection $rows;
+    $cliente = Cliente::findOrFail($id);
+    $comprasOriginales = $cliente->compras()->orderBy('fecha', 'desc')->get();
 
-    public function __construct(Collection $rows)
-    {
-        $this->rows = $rows;
-    }
+    // 🔍 Aplicar filtros por fecha y sucursal
+    $compras = $comprasOriginales->filter(function ($compra) use ($request) {
+        $desde = $request->input('desde');
+        $hasta = $request->input('hasta');
+        $sucursal = $request->input('sucursal');
 
-    public function collection(): Collection
-    {
-        return $this->rows;
-    }
+        $fechaValida = true;
+        $sucursalValida = true;
 
-    public function headings(): array
-    {
-        return ['Cliente', 'Fecha', 'Monto', 'Sucursal'];
-    }
+        if ($desde) {
+            $fechaValida = $fechaValida && $compra->fecha >= $desde;
+        }
+
+        if ($hasta) {
+            $fechaValida = $fechaValida && $compra->fecha <= $hasta;
+        }
+
+        if ($sucursal) {
+            $sucursalValida = $compra->sucursal === $sucursal;
+        }
+
+        return $fechaValida && $sucursalValida;
+    });
+
+    // 📊 Agrupar compras por mes para gráfico
+    $comprasPorMes = $compras->groupBy(function ($compra) {
+        return \Carbon\Carbon::parse($compra->fecha)->format('Y-m');
+    })->map(function ($grupo) {
+        return $grupo->sum('monto');
+    });
+
+    $labels = $comprasPorMes->keys();
+    $data = $comprasPorMes->values();
+
+    // ✅ Cálculos adicionales (si deseas mostrarlos en la vista)
+    $totalCompras = $compras->count();
+    $montoTotal = $compras->sum('monto');
+    $ultimaCompra = $compras->first();
+    $frecuenciaPromedio = $compras->groupBy('cliente_id')->count();
+    $sucursalMasFrecuente = $compras->groupBy('sucursal')->sortDesc()->keys()->first();
+    $totalPuntos = floor($montoTotal / 100);
+
+    return view('reportes.cliente', compact(
+        'cliente',
+        'comprasOriginales',
+        'totalCompras',
+        'montoTotal',
+        'ultimaCompra',
+        'frecuenciaPromedio',
+        'sucursalMasFrecuente',
+        'labels',
+        'data',
+        'totalPuntos'
+    ));
 }

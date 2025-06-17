@@ -22,7 +22,7 @@
 
             <div>
                 <p class="text-sm font-medium text-gray-700 mb-2">Métricas a incluir</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <label class="inline-flex items-center">
                         <input type="checkbox" name="metricas[]" value="total_compras" class="text-green-600"
                             {{ in_array('total_compras', $metricasSeleccionadas ?? []) ? 'checked' : '' }}>
@@ -41,7 +41,7 @@
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-3 pt-4">
+            <div class="flex flex-wrap justify-end gap-4 pt-4">
                 <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">Generar Reporte</button>
                 <a href="{{ route('reportes.crear') }}" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition">Limpiar</a>
             </div>
