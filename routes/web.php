@@ -73,6 +73,8 @@ Route::middleware([
 
     // Reportes
     Route::get('/reportes', [ReporteController::class, 'index']);
+    Route::get('/reportes/crear', [ReporteController::class, 'crear'])->name('reportes.crear');
+    Route::post('/reportes/crear', [ReporteController::class, 'generar'])->name('reportes.generar');
     Route::get('/reportes/cliente/{id}', [ReporteController::class, 'cliente'])->name('reportes.cliente');
 
     // Alertas de inactividad

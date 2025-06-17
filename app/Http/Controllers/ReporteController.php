@@ -25,7 +25,7 @@ class ReporteController extends Controller
 
     // 📌 Muestra el reporte individual de un cliente
     public function cliente(Request $request, $id)
-{
+    {
     $cliente = Cliente::findOrFail($id);
     $comprasOriginales = $cliente->compras()->orderBy('fecha', 'desc')->get();
 
@@ -111,6 +111,58 @@ class ReporteController extends Controller
         'totalPuntos'
     ));
 
-}
+    }
+
+    // 📝 Muestra el formulario para generar un reporte personalizado
+    public function crear()
+    {
+        return view('reportes.crear')
+            ->with('resultados', null)
+            ->with('metricasSeleccionadas', [])
+            ->with('filtros', []);
+    }
+
+    // 📊 Genera un reporte personalizado según las métricas seleccionadas
+    public function generar(Request $request)
+    {
+        $request->validate([
+            'desde' => 'nullable|date',
+            'hasta' => 'nullable|date',
+            'metricas' => 'required|array',
+        ]);
+
+        $metricas = $request->input('metricas', []);
+
+        $query = Compra::query();
+
+        if ($request->filled('desde')) {
+            $query->where('fecha', '>=', $request->desde);
+        }
+
+        if ($request->filled('hasta')) {
+            $query->where('fecha', '<=', $request->hasta);
+        }
+
+        $compras = $query->get();
+
+        $resultados = [];
+
+        if (in_array('total_compras', $metricas)) {
+            $resultados['total_compras'] = $compras->count();
+        }
+
+        if (in_array('monto_total', $metricas)) {
+            $resultados['monto_total'] = $compras->sum('monto');
+        }
+
+        if (in_array('total_puntos', $metricas)) {
+            $resultados['total_puntos'] = floor($compras->sum('monto') / 100);
+        }
+
+        return view('reportes.crear')
+            ->with('resultados', $resultados)
+            ->with('metricasSeleccionadas', $metricas)
+            ->with('filtros', $request->only('desde', 'hasta'));
+    }
 
 }
