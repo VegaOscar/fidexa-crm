@@ -72,7 +72,7 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -114,6 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+@endpush
 
 <h5>Historial de Canjes</h5>
 @if($cliente->canjes->isEmpty())
@@ -128,4 +129,3 @@ document.addEventListener("DOMContentLoaded", function () {
     </ul>
 @endif
 
-@endsection
